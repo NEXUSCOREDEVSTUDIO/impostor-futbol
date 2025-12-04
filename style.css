@@ -375,26 +375,20 @@ select {
     padding: 30px;
     border-radius: 20px;
     width: 100%;
-    text-align: center;
-    margin-bottom: 30px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-#revealed-imposters {
-    font-size: 2rem;
-    margin-top: 15px;
-    color: var(--text-main);
-}
-
-.imposter-hint {
-    font-size: 1.1rem !important;
-    font-weight: 500 !important;
-    color: var(--text-muted) !important;
     margin-top: 15px;
     text-transform: uppercase;
     letter-spacing: 2px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     padding-top: 15px;
+}
+
+.word-explanation {
+    font-size: 1rem !important;
+    font-weight: 400 !important;
+    color: var(--text-muted) !important;
+    margin-top: 10px;
+    font-style: italic;
+    max-width: 90%;
 }
 
 /* Main Menu Specifics */
