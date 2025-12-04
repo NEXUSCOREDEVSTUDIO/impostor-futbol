@@ -174,6 +174,14 @@ if (buttons.skipVote) buttons.skipVote.addEventListener('click', () => handleVot
 if (buttons.restart) buttons.restart.addEventListener('click', resetGame);
 if (buttons.playAgain) buttons.playAgain.addEventListener('click', resetGame);
 
+// Load saved player count on startup
+window.addEventListener('load', () => {
+    const savedCount = localStorage.getItem('imposter_player_count');
+    if (savedCount) {
+        inputs.playerCount.value = savedCount;
+    }
+});
+
 // Functions
 
 function generateNameInputs() {
@@ -185,12 +193,21 @@ function generateNameInputs() {
 
     inputs.namesContainer.innerHTML = '';
 
+    const savedNames = JSON.parse(localStorage.getItem('imposter_player_names') || '[]');
+
     for (let i = 0; i < count; i++) {
         const input = document.createElement('input');
         input.type = 'text';
         input.placeholder = `Nombre Jugador ${i + 1}`;
         input.className = 'player-name-input';
-        input.value = `Jugador ${i + 1}`; // Default value
+        
+        // Use saved name if available, otherwise default
+        if (i < savedNames.length) {
+            input.value = savedNames[i];
+        } else {
+            input.value = `Jugador ${i + 1}`;
+        }
+        
         inputs.namesContainer.appendChild(input);
     }
 
@@ -203,6 +220,11 @@ function startGame() {
         console.log("Start Game clicked");
         const nameInputs = document.querySelectorAll('.player-name-input');
         const playerNames = Array.from(nameInputs).map(input => input.value.trim() || input.placeholder);
+        
+        // Save names and count to localStorage
+        localStorage.setItem('imposter_player_names', JSON.stringify(playerNames));
+        localStorage.setItem('imposter_player_count', inputs.playerCount.value);
+
         const imposterCount = parseInt(inputs.imposterCount.value);
         console.log(`Players: ${playerNames.length}, Imposters: ${imposterCount}`);
 
