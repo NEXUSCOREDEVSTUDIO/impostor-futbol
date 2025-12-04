@@ -18,22 +18,26 @@
         <section id="setup-screen" class="screen active">
             <h1 class="logo">IMPOSTER <span class="highlight">FUTBOL</span></h1>
             <h2 class="logo-small">CONFIGURACIÓN</h2>
-
             <div class="input-group">
-                <label for="player-count">Jugadores (3-40)</label>
+                <label for="player-count">Cantidad de Jugadores</label>
                 <input type="number" id="player-count" min="3" max="40" value="4">
             </div>
 
             <div class="input-group">
-                <label for="imposter-count">Impostores</label>
-                <input type="number" id="imposter-count" min="1" max="3" value="1">
+                <label for="imposter-count">Cantidad de Impostores</label>
+                <input type="number" id="imposter-count" min="1" max="10" value="1">
             </div>
 
-            <div id="names-container" class="names-container">
-                <!-- Dynamic name inputs will go here -->
+            <div class="input-group">
+                <label for="game-duration">Duración de la Partida</label>
+                <select id="game-duration">
+                    <option value="60">1 Minuto</option>
+                    <option value="300" selected>5 Minutos</option>
+                </select>
             </div>
 
             <button id="btn-generate-names" class="btn secondary">Confirmar Cantidad</button>
+            <div id="names-container" class="names-container"></div>
             <button id="btn-start" class="btn primary hidden">Comenzar Juego</button>
         </section>
 

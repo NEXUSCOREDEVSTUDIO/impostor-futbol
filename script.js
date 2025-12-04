@@ -121,6 +121,7 @@ const screens = {
 const inputs = {
     playerCount: document.getElementById('player-count'),
     imposterCount: document.getElementById('imposter-count'),
+    gameDuration: document.getElementById('game-duration'),
     namesContainer: document.getElementById('names-container')
 };
 
@@ -151,7 +152,8 @@ let gameState = {
     currentTurnIndex: 0,
     timerInterval: null,
     secretWordObj: null,
-    imposters: []
+    imposters: [],
+    selectedDuration: 300
 };
 
 // Event Listeners
@@ -200,6 +202,8 @@ function startGame() {
             alert("Debe haber menos impostores que jugadores.");
             return;
         }
+
+        gameState.selectedDuration = parseInt(inputs.gameDuration.value);
 
         // Reset State
         gameState.players = [];
@@ -252,7 +256,7 @@ function nextTurn() {
 
 function startGameLoop() {
     switchScreen('game');
-    startTimer(5 * 60);
+    startTimer(gameState.selectedDuration);
 }
 
 function startTimer(duration) {
