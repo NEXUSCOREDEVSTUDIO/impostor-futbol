@@ -75,10 +75,17 @@
             <button id="btn-restart" class="btn secondary">Reiniciar Juego</button>
         </section>
 
+        <!-- Voting Reveal Screen (Interstitial) -->
+        <section id="voting-reveal-screen" class="screen hidden">
+            <h2 id="next-voter-name">Turno de [Nombre]</h2>
+            <p class="instruction">Pasa el dispositivo a este jugador para que vote en secreto.</p>
+            <button id="btn-start-vote-turn" class="btn primary">Votar</button>
+        </section>
+
         <!-- Voting Screen -->
         <section id="voting-screen" class="screen hidden">
-            <h2>¿Quién es el Impostor?</h2>
-            <p>Toca el nombre del jugador para votar.</p>
+            <h2 id="voting-title">Votación de [Nombre]</h2>
+            <p>¿Quién crees que es el impostor?</p>
             <div id="voting-grid" class="voting-grid">
                 <!-- Dynamic voting buttons -->
             </div>
@@ -92,6 +99,10 @@
             <div id="result-details">
                 <p>Impostores:</p>
                 <h3 id="revealed-imposters" class="highlight"></h3>
+                <div id="ejected-player-info"
+                    style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                    <!-- Ejected player info will go here -->
+                </div>
             </div>
 
             <button id="btn-play-again" class="btn primary">Jugar de Nuevo</button>

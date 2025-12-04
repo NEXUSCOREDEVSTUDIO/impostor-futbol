@@ -114,6 +114,7 @@ const screens = {
     setup: document.getElementById('setup-screen'),
     reveal: document.getElementById('reveal-screen'),
     game: document.getElementById('game-screen'),
+    votingReveal: document.getElementById('voting-reveal-screen'),
     voting: document.getElementById('voting-screen'),
     result: document.getElementById('result-screen')
 };
@@ -130,6 +131,7 @@ const buttons = {
     start: document.getElementById('btn-start'),
     nextTurn: document.getElementById('btn-next-turn'),
     voteStart: document.getElementById('btn-vote-start'),
+    startVoteTurn: document.getElementById('btn-start-vote-turn'),
     skipVote: document.getElementById('btn-skip-vote'),
     restart: document.getElementById('btn-restart'),
     playAgain: document.getElementById('btn-play-again')
@@ -143,7 +145,10 @@ const display = {
     timer: document.getElementById('timer'),
     votingGrid: document.getElementById('voting-grid'),
     resultTitle: document.getElementById('result-title'),
-    revealedImposters: document.getElementById('revealed-imposters')
+    revealedImposters: document.getElementById('revealed-imposters'),
+    nextVoterName: document.getElementById('next-voter-name'),
+    votingTitle: document.getElementById('voting-title'),
+    ejectedPlayerInfo: document.getElementById('ejected-player-info')
 };
 
 // Game State
@@ -153,7 +158,9 @@ let gameState = {
     timerInterval: null,
     secretWordObj: null,
     imposters: [],
-    selectedDuration: 300
+    selectedDuration: 300,
+    votingTurnIndex: 0,
+    votes: {} // { "PlayerName": count }
 };
 
 // Event Listeners
@@ -162,7 +169,8 @@ if (buttons.start) buttons.start.addEventListener('click', startGame);
 if (display.cardContainer) display.cardContainer.addEventListener('click', flipCard);
 if (buttons.nextTurn) buttons.nextTurn.addEventListener('click', nextTurn);
 if (buttons.voteStart) buttons.voteStart.addEventListener('click', startVoting);
-if (buttons.skipVote) buttons.skipVote.addEventListener('click', () => showResult(false, "Nadie"));
+if (buttons.startVoteTurn) buttons.startVoteTurn.addEventListener('click', showVotingScreen);
+if (buttons.skipVote) buttons.skipVote.addEventListener('click', () => handleVote(null));
 if (buttons.restart) buttons.restart.addEventListener('click', resetGame);
 if (buttons.playAgain) buttons.playAgain.addEventListener('click', resetGame);
 
@@ -287,38 +295,110 @@ function updateTimerDisplay(seconds) {
 
 function startVoting() {
     clearInterval(gameState.timerInterval);
-    switchScreen('voting');
+    gameState.votingTurnIndex = 0;
+    gameState.votes = {};
+
+    // Initialize votes count
+    gameState.players.forEach(p => gameState.votes[p.name] = 0);
+    gameState.votes["Skip"] = 0;
+
+    loadVotingTurn();
+}
+
+function loadVotingTurn() {
+    const voter = gameState.players[gameState.votingTurnIndex];
+    display.nextVoterName.textContent = `Turno de ${voter.name}`;
+    switchScreen('votingReveal');
+}
+
+function showVotingScreen() {
+    const voter = gameState.players[gameState.votingTurnIndex];
+    display.votingTitle.textContent = `Votación de ${voter.name}`;
 
     display.votingGrid.innerHTML = '';
     gameState.players.forEach(player => {
+        // Don't let player vote for themselves? (Optional, but usually allowed in Among Us)
+        // For now, allow it.
+
         const btn = document.createElement('button');
         btn.className = 'vote-btn';
         btn.textContent = player.name;
-        btn.onclick = () => handleVote(player);
+        btn.onclick = () => handleVote(player.name);
         display.votingGrid.appendChild(btn);
     });
+
+    switchScreen('voting');
 }
 
-function handleVote(targetPlayer) {
-    if (targetPlayer.isImposter) {
-        showResult(true, targetPlayer.name);
+function handleVote(votedName) {
+    if (votedName) {
+        gameState.votes[votedName] = (gameState.votes[votedName] || 0) + 1;
     } else {
-        showResult(false, targetPlayer.name);
+        gameState.votes["Skip"] = (gameState.votes["Skip"] || 0) + 1;
+    }
+
+    gameState.votingTurnIndex++;
+
+    if (gameState.votingTurnIndex < gameState.players.length) {
+        loadVotingTurn();
+    } else {
+        calculateAndShowResults();
     }
 }
 
-function showResult(innocentsWon, votedName) {
+function calculateAndShowResults() {
+    let maxVotes = -1;
+    let candidates = [];
+
+    // Find max votes
+    for (const [name, count] of Object.entries(gameState.votes)) {
+        if (count > maxVotes) {
+            maxVotes = count;
+            candidates = [name];
+        } else if (count === maxVotes) {
+            candidates.push(name);
+        }
+    }
+
+    let ejectedName = null;
+    let resultMessage = "";
+    let resultClass = "";
+
+    if (candidates.length === 1 && candidates[0] !== "Skip") {
+        ejectedName = candidates[0];
+    }
+
     switchScreen('result');
+    display.revealedImposters.textContent = gameState.imposters.join(", ");
 
-    if (innocentsWon) {
-        display.resultTitle.textContent = "¡LOS INOCENTES GANAN!";
-        display.resultTitle.className = "win";
+    const ejectedInfoDiv = display.ejectedPlayerInfo;
+    ejectedInfoDiv.innerHTML = '';
+
+    if (ejectedName) {
+        const ejectedPlayer = gameState.players.find(p => p.name === ejectedName);
+        const isImposter = ejectedPlayer.isImposter;
+
+        if (isImposter) {
+            display.resultTitle.textContent = "¡LOS INOCENTES GANAN!";
+            display.resultTitle.className = "win";
+            resultMessage = `${ejectedName} era el Impostor.`;
+        } else {
+            display.resultTitle.textContent = "¡LOS IMPOSTORES GANAN!";
+            display.resultTitle.className = "loss";
+            resultMessage = `${ejectedName} NO era el Impostor.`;
+        }
     } else {
-        display.resultTitle.textContent = "¡LOS IMPOSTORES GANAN!";
-        display.resultTitle.className = "loss";
+        // Tie or Skip
+        display.resultTitle.textContent = "NADIE FUE EXPULSADO";
+        display.resultTitle.className = "highlight";
+        resultMessage = "Empate o votos saltados.";
     }
 
-    display.revealedImposters.textContent = gameState.imposters.join(", ");
+    const messageP = document.createElement('p');
+    messageP.style.fontSize = "1.2rem";
+    messageP.style.color = "white";
+    messageP.textContent = resultMessage;
+    ejectedInfoDiv.appendChild(messageP);
 }
 
 function resetGame() {
@@ -367,9 +447,13 @@ function flipCard() {
 
 function switchScreen(screenName) {
     Object.values(screens).forEach(screen => {
-        screen.classList.remove('active');
-        screen.classList.add('hidden');
+        if (screen) {
+            screen.classList.remove('active');
+            screen.classList.add('hidden');
+        }
     });
-    screens[screenName].classList.add('active');
-    screens[screenName].classList.remove('hidden');
+    if (screens[screenName]) {
+        screens[screenName].classList.add('active');
+        screens[screenName].classList.remove('hidden');
+    }
 }
